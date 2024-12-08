@@ -60,4 +60,24 @@ export class UserService {
   async findOneByUid(uid: string): Promise<User | undefined> {
     return this.userRepository.findOne({ where: { uid } });
   }
+  async save(user: User): Promise<User> {
+    return this.userRepository.save(user); // 调用 save 方法保存用户
+  }
+
+  // 更新用户设备信息
+  async updateDeviceInfo(user: User, deviceInfo: string): Promise<void> {
+    if (!user.devices) user.devices = [];
+    if (!user.devices.includes(deviceInfo)) {
+      user.devices.push(deviceInfo);
+      await this.userRepository.save(user);
+    }
+  }
+
+  // 检查设备是否已达到最大登录数
+  async checkMaxDevices(user: User): Promise<boolean> {
+    if (user.devices && user.devices.length >= 5) {
+      return true;
+    }
+    return false;
+  }
 }

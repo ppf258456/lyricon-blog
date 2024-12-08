@@ -13,6 +13,7 @@ import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { LoginAttempts } from './login-attempts.entity'; // 登录尝试记录
 import * as bcrypt from 'bcryptjs';
+import { RefreshTokenService } from './RefreshToken.Service';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     @InjectRepository(LoginAttempts)
     private readonly loginAttemptsRepository: Repository<LoginAttempts>, // 登录尝试记录
     private readonly jwtService: JwtService,
+    private readonly refreshTokenService: RefreshTokenService, // 注入 RefreshTokenService
   ) {}
 
   // 登录方法（邮箱或UID）
@@ -66,13 +68,20 @@ export class AuthService {
       );
       throw new UnauthorizedException('密码错误');
     }
+    // 检查设备数是否超过限制（最多 5 台设备）
+    const maxDevicesExceeded = await this.userService.checkMaxDevices(user);
+    if (maxDevicesExceeded) {
+      this.logger.warn(`用户 ${user.email} 设备数超过限制`);
+      throw new UnauthorizedException('设备数超过最大登录数');
+    }
 
-    // 生成 access token
-    const accessToken = this.jwtService.sign({
-      uid: user.uid,
-      email: user.email,
-    });
-
+    // // 撤销该设备的旧 refresh token
+    await this.refreshTokenService.revokeOldTokenForExternal(user, userAgent);
+    // 生成短期的 access token
+    const accessToken = this.jwtService.sign(
+      { uid: user.uid, email: user.email },
+      { expiresIn: '1h' }, // 短期有效期，通常 15 分钟
+    );
     // 生成 refresh token
     const refreshToken = this.jwtService.sign(
       { uid: user.uid, email: user.email },

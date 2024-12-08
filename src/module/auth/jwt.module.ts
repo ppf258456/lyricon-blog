@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from '../../guards/JwtAuthGuard '; // 引入 JwtAuthGuard
 import { JwtStrategy } from '../../jwt/JwtStrategy';
 import { LoginAttempts } from './login-attempts.entity';
+import { RefreshTokenService } from './RefreshToken.Service';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -21,7 +22,7 @@ import { LoginAttempts } from './login-attempts.entity';
     UserModule, // 导入 UserModule，确保可以访问 UserService
     TypeOrmModule.forFeature([RefreshToken, LoginAttempts]), // 注册 RefreshToken 实体
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshTokenService],
   controllers: [AuthController], // 注册 AuthController
   exports: [JwtModule],
 })
