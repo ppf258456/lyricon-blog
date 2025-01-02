@@ -7,11 +7,13 @@ import {
   UseGuards,
   Logger,
   ConflictException,
+  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from '../user/dto/create-user.dto';
-import { JwtAuthGuard } from '../../guards/JwtAuthGuard '; // JwtAuthGuard 用于保护接口
+import { JwtAuthGuard } from '../../guards/JwtAuth.guard '; // JwtAuthGuard 用于保护接口
 import { Request, Response } from 'express';
+import { LoginDto } from './dto/LoginDto';
 
 @Controller()
 export class AuthController {
@@ -21,7 +23,7 @@ export class AuthController {
   // 登录接口（支持邮箱/UID）
   @Post('login')
   async login(
-    @Body() createUserDto: CreateUserDto,
+    @Body() loginDto: LoginDto, // 将参数类型修改为LoginDto
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -30,21 +32,30 @@ export class AuthController {
 
     try {
       const tokens = await this.authService.login(
-        createUserDto,
+        loginDto,
         userAgent as string,
         ip,
       );
       return res.status(200).json(tokens);
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        return res.status(401).json({ message: error.message });
+      }
+
       if (error instanceof ConflictException) {
         return res.status(409).json({ message: error.message });
       }
 
-      if (error instanceof Error) {
-        this.logger.error(`Login failed: ${error.message}`);
-        return res.status(401).json({ message: error.message });
+      if (error instanceof BadRequestException) {
+        return res.status(400).json({ message: error.message });
       }
 
+      if (error instanceof Error) {
+        this.logger.error(`Login failed: ${error.message}`);
+        return res.status(500).json({ message: 'Unknown error' });
+      }
+
+      // 如果 error 不是 Error 类型，可以处理其他情况
       this.logger.error(`Login failed: Unknown error`);
       return res.status(500).json({ message: 'Unknown error' });
     }

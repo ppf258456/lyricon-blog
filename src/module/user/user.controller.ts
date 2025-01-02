@@ -6,6 +6,9 @@ import {
   BadRequestException,
   Get,
   Query,
+  Param,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,6 +16,13 @@ import { User } from './user.entity';
 import { DefaultUserValuesService } from './utils/default-user-values.service';
 import { validate } from 'class-validator';
 import { EmailVerificationService } from './../mail/email-verification.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
+import { JwtAuthGuard } from 'src/guards/JwtAuth.guard ';
+import { AdminGuard } from 'src/guards/Admin.guard';
+import { plainToInstance } from 'class-transformer';
+
 @Controller('users')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
@@ -84,5 +94,76 @@ export class UserController {
 
     const isRegistered = await this.userService.isEmailRegistered(email);
     return { isRegistered };
+  }
+
+  // 获取所有用户信息
+  @Get('list')
+  @UseGuards(JwtAuthGuard, AdminGuard) // 使用 JwtAuthGuard 和 AdminGuard 来保护接口
+  async getAllUsers() {
+    const user = await this.userService.findAll();
+    console.log(user);
+    // 使用 instanceToPlain 转换用户实体
+    const userWithoutPassword = plainToInstance(User, user, {
+      excludeExtraneousValues: false, // 排除不需要的字段（如 password）
+    });
+    console.log(userWithoutPassword);
+
+    this.logger.log(userWithoutPassword);
+    // 返回用户的基本信息
+    return userWithoutPassword;
+  }
+
+  // 获取指定用户信息（仅返回基本信息）
+  @Get(':uid')
+  async getUserByUid(@Param('uid') uid: string) {
+    // 根据 uid 查找用户
+    const user = await this.userService.findOneByUid(uid);
+
+    this.logger.log(user);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // 使用 instanceToPlain 转换用户实体
+    const userWithoutPassword = plainToInstance(User, user, {
+      excludeExtraneousValues: false, // 排除不需要的字段（如 password）
+    });
+    console.log(userWithoutPassword);
+
+    this.logger.log(userWithoutPassword);
+    // 返回用户的基本信息
+    return userWithoutPassword;
+  }
+  // 更新用户基本信息
+  @Put(':uid')
+  @UseGuards(JwtAuthGuard)
+  async updateUser(
+    @Param('uid') uid: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    await this.userService.update(uid, updateUserDto);
+    return '修改成功';
+  }
+  @Put(':uid/password')
+  @UseGuards(JwtAuthGuard)
+  async updatePassword(
+    @Param('uid') uid: string,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return await this.userService.updatePassword(uid, updatePasswordDto);
+  }
+  // 修改用户邮箱
+  @Put(':uid/email')
+  @UseGuards(JwtAuthGuard)
+  async updateEmail(
+    @Param('uid') uid: string,
+    @Body() updateEmailDto: UpdateEmailDto,
+  ) {
+    return await this.userService.updateEmail(uid, updateEmailDto);
+  }
+  @Put('delete/:uid')
+  @UseGuards(JwtAuthGuard, AdminGuard) // 需要管理员权限
+  async softDeleteUser(@Param('uid') uid: string) {
+    return await this.userService.softDelete(uid);
   }
 }

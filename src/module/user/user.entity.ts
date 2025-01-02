@@ -8,7 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { RefreshToken } from '../auth/refresh-token.entity';
 export enum UserRole {
   ADMIN = 'admin',
@@ -29,12 +29,15 @@ export enum UserLevel {
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
+  @Expose()
   id: number;
 
   @Column({ unique: true })
+  @Expose()
   uid: string; // 用户唯一标识符
 
   @Column({ nullable: false, unique: true })
+  @Expose()
   username: string; // 用户名
 
   @Exclude() // 排除password字段
@@ -42,6 +45,7 @@ export class User {
   password: string; // 用户密码（应加密存储）
 
   @Column({ nullable: false, unique: true })
+  @Expose()
   email: string; // 用户电子邮件
 
   @Column({ default: true })
@@ -51,15 +55,19 @@ export class User {
   role: UserRole;
 
   @Column({ nullable: true, type: 'longtext' })
+  @Expose()
   avatar: string; // 头像
 
   @Column({ nullable: true, type: 'longtext' })
+  @Expose()
   backgroundImage: string; // 背景图 URL
 
   @Column({ nullable: true })
+  @Expose()
   bio: string; // 个人简介
 
   @Column({ default: 0 })
+  @Expose()
   coins: number; // 硬币数
 
   @Column({ type: 'timestamp', nullable: true })
@@ -81,6 +89,7 @@ export class User {
     enum: UserLevel,
     default: UserLevel.LEVEL_0,
   })
+  @Expose()
   level: UserLevel; // 用户等级
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

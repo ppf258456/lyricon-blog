@@ -6,6 +6,9 @@ export class UidService {
   generateUid(): string {
     const timestamp = Date.now(); // 获取当前时间戳（毫秒）
     const random = Math.floor(Math.random() * 1000000); // 生成一个随机数，用来增加随机性
-    return `${timestamp}${random}`; // 将时间戳和随机数拼接
+    const uid = `${timestamp}${random}`;
+    console.log('uid:', typeof uid);
+
+    return uid; // 将时间戳和随机数拼接
   }
 }

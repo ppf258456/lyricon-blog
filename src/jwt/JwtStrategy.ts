@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userService.findOneByUid(payload.uid);
 
     if (!user) {
-      throw new Error('Unauthorized');
+      throw new NotFoundException('无效的用户或无权访问！');
     }
 
     return user; // 如果验证通过，返回用户信息

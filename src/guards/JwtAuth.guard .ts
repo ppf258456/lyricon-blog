@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
@@ -13,7 +13,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   handleRequest(err: any, user: any) {
     // 这里我们可以处理用户信息、错误或者自定义异常
     if (err || !user) {
-      throw err || new Error('Unauthorized');
+      if (err && err.name === 'UnauthorizedError') {
+        throw new NotFoundException('无效的用户或无权访问！');
+      } else {
+        throw new Error('Unauthorized');
+      }
     }
     return user;
   }

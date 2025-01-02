@@ -7,13 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from '../user/dto/create-user.dto';
 import { RefreshToken } from './refresh-token.entity';
 import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { LoginAttempts } from './login-attempts.entity'; // 登录尝试记录
 import * as bcrypt from 'bcryptjs';
 import { RefreshTokenService } from './RefreshToken.Service';
+import { LoginDto } from './dto/LoginDto';
 
 @Injectable()
 export class AuthService {
@@ -31,11 +31,11 @@ export class AuthService {
 
   // 登录方法（邮箱或UID）
   async login(
-    createUserDto: CreateUserDto,
+    loginDto: LoginDto, // 参数类型修改为LoginDto
     userAgent: string,
     ip: string,
   ): Promise<any> {
-    const { email, password, uid } = createUserDto;
+    const { email, password, uid } = loginDto;
 
     let user: User;
     // 检查是否提供了 email 或 uid，确保只能有一个
@@ -75,12 +75,12 @@ export class AuthService {
       throw new UnauthorizedException('设备数超过最大登录数');
     }
 
-    // // 撤销该设备的旧 refresh token
+    // 撤销该设备的旧 refresh token
     await this.refreshTokenService.revokeOldTokenForExternal(user, userAgent);
     // 生成短期的 access token
     const accessToken = this.jwtService.sign(
       { uid: user.uid, email: user.email },
-      { expiresIn: '1h' }, // 短期有效期，通常 15 分钟
+      { expiresIn: '1h' }, // 短期有效期
     );
     // 生成 refresh token
     const refreshToken = this.jwtService.sign(

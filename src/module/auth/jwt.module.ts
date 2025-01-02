@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module'; // 引入 UserModule
 import { RefreshToken } from './refresh-token.entity'; // 引入 RefreshToken 实体
 import { AuthController } from './auth.controller';
-import { JwtAuthGuard } from '../../guards/JwtAuthGuard '; // 引入 JwtAuthGuard
+import { JwtAuthGuard } from '../../guards/JwtAuth.guard '; // 引入 JwtAuthGuard
 import { JwtStrategy } from '../../jwt/JwtStrategy';
 import { LoginAttempts } from './login-attempts.entity';
 import { RefreshTokenService } from './RefreshToken.Service';

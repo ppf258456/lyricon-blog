@@ -20,10 +20,6 @@ export class CreateUserDto {
 
   @IsEmail()
   email: string;
-
-  @IsString() // UID
-  uid: string;
-
   @IsString({ message: '验证码必须是字符串类型' })
   emailVerificationCode?: string;
 

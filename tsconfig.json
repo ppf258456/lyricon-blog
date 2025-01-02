@@ -18,6 +18,9 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
-    "strict": true,
+    "strict": true,  
+    "paths": {
+      "@autoExpose": ["src/decorators/auto-expose.decorator.ts"]
+    }
   }
 }

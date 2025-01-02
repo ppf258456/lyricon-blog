@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { RefreshToken } from './refresh-token.entity';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/user.entity';
@@ -44,6 +44,7 @@ export class RefreshTokenService {
         user: { id: user.id },
         deviceInfo: deviceInfo,
         isRevoked: false,
+        deletedAt: IsNull(),
       },
     });
 
@@ -53,6 +54,7 @@ export class RefreshTokenService {
       );
 
       oldToken.isRevoked = true; // 将旧的 Token 标记为撤销
+      oldToken.deletedAt = new Date(); // 设置删除时间为当前时间
       await this.refreshTokenRepository.save(oldToken);
     } else {
       console.log(
